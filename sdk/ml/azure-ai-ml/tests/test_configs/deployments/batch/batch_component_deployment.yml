@@ -7,6 +7,7 @@ type: component
 job_definition:
     Type: pipeline
     # component: ../../components/component_e2e.yml
-    Component: azureml:helloworld_pipeline_component:1
+    # Component: azureml:helloworld_pipeline_component:1
+    Job: azureml:hello_pipeline_abc
     Settings:
         continue_on_step_failure: false

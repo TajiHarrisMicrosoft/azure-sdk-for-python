@@ -253,30 +253,53 @@ class BatchDeploymentOperations(_ScopeDependentOperations):
         :param orchestrators: Operation Orchestrator
         :type orchestrators: _operation_orchestrator.OperationOrchestrator
         """
+        import debugpy
+        debugpy.connect(('localhost', 5678))
+        debugpy.breakpoint()
         component = None
-        if isinstance(deployment.job_definition.component, PipelineComponent):
-            component = self._component_operations.create_or_update(
-                name =  deployment.job_definition.component.name,
-                resource_group_name=self._resource_group_name,
-                workspace_name=self._workspace_name,
-                body = deployment.job_definition.component._to_rest_object(),
-                version=deployment.job_definition.component.version,
-                **self._init_kwargs
-            )
-            component = Component._from_rest_object(component)
-            deployment.job_definition.component = None
-            deployment.job_definition.component_id = component.id
-            if not deployment.job_definition.name and component.name:
-                deployment.job_definition.name = component.name
-            if not deployment.job_definition.description and component.description:
-                deployment.job_definition.description = component.description
-            if not deployment.job_definition.tags and component.tags:
-                deployment.job_definition.tags = component.tags
-        elif isinstance(deployment.job_definition.component, str):
-            component_id = orchestrators.get_asset_arm_id(
-                deployment.job_definition.component,
-                azureml_type=AzureMLResourceType.COMPONENT
-            )
-            if not deployment.job_definition.name:
-                deployment.job_definition.name = deployment.job_definition.component.split(":")[0]
-            deployment.job_definition.component_id = component_id
+        if (deployment.job_definition.component):
+            if isinstance(deployment.job_definition.component, PipelineComponent):
+                component = self._component_operations.create_or_update(
+                    name =  deployment.job_definition.component.name,
+                    resource_group_name=self._resource_group_name,
+                    workspace_name=self._workspace_name,
+                    body = deployment.job_definition.component._to_rest_object(),
+                    version=deployment.job_definition.component.version,
+                    **self._init_kwargs
+                )
+                component = Component._from_rest_object(component)
+                deployment.job_definition.component = None
+                deployment.job_definition.component_id = component.id
+                if not deployment.job_definition.name and component.name:
+                    deployment.job_definition.name = component.name
+                if not deployment.job_definition.description and component.description:
+                    deployment.job_definition.description = component.description
+                if not deployment.job_definition.tags and component.tags:
+                    deployment.job_definition.tags = component.tags
+            elif isinstance(deployment.job_definition.component, str):
+                component_id = orchestrators.get_asset_arm_id(
+                    deployment.job_definition.component,
+                    azureml_type=AzureMLResourceType.COMPONENT
+                )
+                if not deployment.job_definition.name:
+                    deployment.job_definition.name = deployment.job_definition.component.split(":")[0]
+                deployment.job_definition.component_id = component_id
+        elif(deployment.job_definition.job):
+            if isinstance(deployment.job_definition.job, str):
+                component = PipelineComponent(source_job_id= deployment.job_definition.job)
+                rest_component = self._component_operations.create_or_update(
+                    name = component.name,
+                    resource_group_name=self._resource_group_name,
+                    workspace_name=self._workspace_name,
+                    body = component._to_rest_object(),
+                    version= component.version,
+                    **self._init_kwargs
+                )
+                deployment.job_definition.job = None
+                deployment.job_definition.component_id = rest_component.id
+                if not deployment.job_definition.name and rest_component.name:
+                    deployment.job_definition.name = rest_component.name
+                if not deployment.job_definition.description and rest_component.description:
+                    deployment.job_definition.description = rest_component.description
+                if not deployment.job_definition.tags and rest_component.tags:
+                    deployment.job_definition.tags = rest_component.tags
