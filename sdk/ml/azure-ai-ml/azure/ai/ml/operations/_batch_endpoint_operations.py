@@ -233,6 +233,10 @@ class BatchEndpointOperations(_ScopeDependentOperations):
         job_name = kwargs.get("job_name", None)
         params_override = kwargs.get("params_override", None) or []
         input = kwargs.get("input", None)  # pylint: disable=redefined-builtin
+        green_mode_enabled = kwargs.get("green_mode_enabled", None)
+        max_completion_time = kwargs.get("max_completion_time", None)
+        estimated_job_duration = kwargs.get("estimated_job_duration", None)
+
         # Until this bug is resolved https://msdata.visualstudio.com/Vienna/_workitems/edit/1446538
         if deployment_name:
             self._validate_deployment_name(endpoint_name, deployment_name)
@@ -273,6 +277,13 @@ class BatchEndpointOperations(_ScopeDependentOperations):
             params_override.append({EndpointYamlFields.BATCH_JOB_OUTPUT_DATA: outputs})
         if job_name:
             params_override.append({EndpointYamlFields.BATCH_JOB_NAME: job_name})
+        if green_mode_enabled:
+            properties ={
+                'greenModeEnabled' : green_mode_enabled,
+                'greenModeMaxCompletionTime' : max_completion_time,
+                'greenModeEstimatedJobDuration' : estimated_job_duration,
+            }
+            params_override.append({'properties': properties})
 
         # Batch job doesn't have a python class, loading a rest object using params override
         context = {
